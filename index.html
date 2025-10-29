@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Formulir Pengumpulan Data</title>
 
-  <!-- Tailwind CDN -->
+  <!-- Tailwind CDN (cukup untuk demo; untuk production disarankan build sendiri) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Babel Standalone -->
   <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 
-  <!-- Import map: konsisten React 18 -->
+  <!-- Import map: gunakan satu versi React yang konsisten -->
   <script type="importmap">
   {
     "imports": {
@@ -21,16 +21,226 @@
     }
   }
   </script>
+
+  <style>
+    /* agar halaman tidak kosong saat loading */
+    body { min-height: 100vh; }
+  </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
   <div id="root"></div>
 
-  <!-- Diproses oleh Babel + ESM, preset sederhana -->
-  <script
-    type="text/babel"
-    data-type="module"
-    data-presets="typescript,react"
-    src="./index.tsx">
+  <!-- Semua TSX di-inline: paling aman dari cache & preset nyasar -->
+  <script type="text/babel" data-type="module" data-presets="typescript,react">
+    import React, { useState, useCallback } from 'react';
+    import ReactDOM from 'react-dom/client';
+
+    const SuccessMessage: React.FC = () => {
+      return (
+        <div className="text-center py-10 px-4">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-900">
+            <svg className="h-8 w-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-slate-800 dark:text-white">Terima Kasih!</h2>
+          <p className="mt-2 text-slate-500 dark:text-slate-400">
+            Data Anda telah berhasil dikirim. Kami akan meninjaunya segera.
+          </p>
+        </div>
+      );
+    };
+
+    interface FormFieldProps {
+      label: string;
+      id: string;
+      type: 'text' | 'url' | 'textarea';
+      value: string;
+      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+      placeholder?: string;
+      required?: boolean;
+      error?: string;
+    }
+
+    const FormField: React.FC<FormFieldProps> = ({
+      label, id, type, value, onChange, placeholder, required = false, error,
+    }) => {
+      const commonProps = {
+        id, name: id, value, onChange, placeholder, required,
+        className:
+          `w-full px-4 py-2 mt-2 bg-slate-50 dark:bg-slate-700 border rounded-lg focus:outline-none focus:ring-2 dark:text-white transition-colors duration-300 ${
+            error
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500'
+          }`,
+      } as const;
+
+      return (
+        <div>
+          <label htmlFor={id} className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            {label}{required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          {type === 'textarea' ? (
+            <textarea {...commonProps} rows={4} />
+          ) : (
+            <input type={type} {...commonProps} />
+          )}
+          {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+        </div>
+      );
+    };
+
+    interface FormDataShape {
+      serviceUrl: string;
+      tosUrl: string;
+      userPolicyUrl: string;
+      aiPolicyUrl: string;
+      legalUrl: string;
+      department: string;
+      purpose: string;
+      dataUsed: string;
+    }
+
+    const initialFormData: FormDataShape = {
+      serviceUrl: '',
+      tosUrl: '',
+      userPolicyUrl: '',
+      aiPolicyUrl: '',
+      legalUrl: '',
+      department: '',
+      purpose: '',
+      dataUsed: '',
+    };
+
+    // GANTI INI dengan URL Web App Google Apps Script-mu
+    const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+    const App: React.FC = () => {
+      const [formData, setFormData] = useState<FormDataShape>(initialFormData);
+      const [status, setStatus] = useState<'idle'|'submitting'|'success'|'error'>('idle');
+      const [errors, setErrors] = useState<Partial<Record<keyof FormDataShape, string>>>({});
+      const [submissionError, setSubmissionError] = useState<string | null>(null);
+
+      const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+        if (errors[id as keyof FormDataShape]) {
+          setErrors(prev => ({ ...prev, [id]: undefined }));
+        }
+      }, [errors]);
+
+      const urlRegex = /^https?:\/\/[^\s]+$/i;
+
+      const validateForm = () => {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+          setSubmissionError('Konfigurasi GOOGLE_SCRIPT_URL dulu pada kode (URL Web App Apps Script).');
+          return false;
+        }
+        const newErr: Partial<Record<keyof FormDataShape, string>> = {};
+        if (formData.serviceUrl && !urlRegex.test(formData.serviceUrl)) newErr.serviceUrl = 'URL layanan tidak valid.';
+        if (formData.tosUrl && !urlRegex.test(formData.tosUrl)) newErr.tosUrl = 'URL Terms of Service tidak valid.';
+        if (formData.userPolicyUrl && !urlRegex.test(formData.userPolicyUrl)) newErr.userPolicyUrl = 'URL User Policy tidak valid.';
+        if (formData.aiPolicyUrl && !urlRegex.test(formData.aiPolicyUrl)) newErr.aiPolicyUrl = 'URL AI Policy tidak valid.';
+        if (formData.legalUrl && !urlRegex.test(formData.legalUrl)) newErr.legalUrl = 'URL Legal tidak valid.';
+        if (!formData.department) newErr.department = 'Departemen pengguna wajib diisi.';
+        if (!formData.purpose) newErr.purpose = 'Tujuan penggunaan wajib diisi.';
+        if (!formData.dataUsed) newErr.dataUsed = 'Data yang digunakan wajib diisi.';
+        setErrors(newErr);
+        return Object.keys(newErr).length === 0;
+      };
+
+      const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+
+        setStatus('submitting');
+        setSubmissionError(null);
+
+        try {
+          // Kirim sebagai FormData → tanpa header custom → hindari preflight CORS
+          const fd = new FormData();
+          (Object.entries(formData) as [keyof FormDataShape, string][])
+            .forEach(([k, v]) => fd.append(String(k), v));
+
+          await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: fd });
+
+          setStatus('success');
+          setFormData(initialFormData);
+          setTimeout(() => setStatus('idle'), 5000);
+        } catch (err) {
+          console.error('Submit error:', err);
+          setStatus('error');
+          setSubmissionError('Terjadi kesalahan saat mengirim data. Coba lagi nanti.');
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-6 md:p-10 border border-slate-200 dark:border-slate-700">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Formulir Pengumpulan Data</h1>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">Silakan isi detail di bawah ini dengan lengkap.</p>
+              </div>
+
+              {status === 'success' ? (
+                <SuccessMessage />
+              ) : (
+                <form onSubmit={handleSubmit} noValidate>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField label="URL Layanan" id="serviceUrl" type="url" value={formData.serviceUrl} onChange={handleChange} placeholder="https://example.com" error={errors.serviceUrl} />
+                      <FormField label="URL Terms of Service" id="tosUrl" type="url" value={formData.tosUrl} onChange={handleChange} placeholder="https://example.com/terms" error={errors.tosUrl} />
+                      <FormField label="URL User Policy" id="userPolicyUrl" type="url" value={formData.userPolicyUrl} onChange={handleChange} placeholder="https://example.com/privacy" error={errors.userPolicyUrl} />
+                      <FormField label="URL AI Policy" id="aiPolicyUrl" type="url" value={formData.aiPolicyUrl} onChange={handleChange} placeholder="https://example.com/ai-policy" error={errors.aiPolicyUrl} />
+                    </div>
+
+                    <FormField label="URL Legal" id="legalUrl" type="url" value={formData.legalUrl} onChange={handleChange} placeholder="https://example.com/legal" error={errors.legalUrl} />
+                    <FormField label="Departemen Pengguna" id="department" type="text" value={formData.department} onChange={handleChange} placeholder="cth: IT & Security, Marketing" required error={errors.department} />
+                    <FormField label="Tujuan Penggunaan" id="purpose" type="textarea" value={formData.purpose} onChange={handleChange} placeholder="Jelaskan tujuan penggunaan layanan..." required error={errors.purpose} />
+                    <FormField label="Data yang Digunakan" id="dataUsed" type="textarea" value={formData.dataUsed} onChange={handleChange} placeholder="Sebutkan jenis data (mis. email, data pelanggan, dsb.)" required error={errors.dataUsed} />
+
+                    {submissionError && (
+                      <div className="text-center p-2 bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 rounded-lg text-sm">
+                        {submissionError}
+                      </div>
+                    )}
+
+                    <div className="pt-4">
+                      <button
+                        type="submit"
+                        disabled={status === 'submitting'}
+                        className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-300 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {status === 'submitting' ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Mengirim...
+                          </>
+                        ) : (
+                          'Kirim Data'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+            <footer className="text-center mt-6 text-sm text-slate-500 dark:text-slate-400">
+              <p>&copy; {new Date().getFullYear()} Perusahaan Anda. Hak Cipta Dilindungi.</p>
+            </footer>
+          </div>
+        </div>
+      );
+    };
+
+    const rootElement = document.getElementById('root');
+    if (!rootElement) { throw new Error('Root element tidak ditemukan'); }
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<React.StrictMode><App /></React.StrictMode>);
   </script>
 </body>
 </html>

@@ -2,29 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Formulir Pengumpulan Data</title>
+
+  <!-- Tailwind (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- 1. Babel Standalone ditambahkan di sini -->
+
+  <!-- Babel Standalone -->
   <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 
-  <!-- 2. Importmap diperbaiki agar lebih eksplisit -->
+  <!-- Import map: gunakan SATU versi React konsisten (React 18) -->
   <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime"
+    }
   }
-}
-</script>
+  </script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900">
   <div id="root"></div>
-  <!-- 3. Tipe skrip diubah agar Babel bisa memprosesnya -->
-  <script type="text/babel" data-type="module" src="./index.tsx"></script>
+
+  <!-- 
+    Penting:
+    1) type="text/babel" agar diproses Babel
+    2) data-type="module" supaya import ESM bekerja di browser
+    3) data-presets berisi react + typescript supaya TSX diparse
+  -->
+  <script
+    type="text/babel"
+    data-type="module"
+    data-presets="[['react', {'runtime':'classic'}], 'typescript']"
+    src="./index.tsx">
+  </script>
 </body>
 </html>

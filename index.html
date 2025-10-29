@@ -23,12 +23,11 @@
   </script>
 </head>
 
-<!-- BG: gradient hijau elegan + dukung dark mode -->
 <body class="min-h-screen bg-gradient-to-br from-lime-50 to-emerald-100 dark:from-emerald-950 dark:to-teal-900">
   <div id="root"></div>
 
   <script type="text/babel" data-type="module" data-presets="typescript,react">
-    import React, { useState, useCallback } from 'react';
+    import React, { useState, useCallback, useEffect } from 'react';
     import ReactDOM from 'react-dom/client';
 
     const SuccessMessage = () => (
@@ -39,7 +38,7 @@
           </svg>
         </div>
         <h2 className="mt-4 text-2xl font-bold text-emerald-900 dark:text-white">Terima Kasih!</h2>
-        <p className="mt-2 text-emerald-700/80 dark:text-emerald-200/80">
+        <p className="mt-2 text-emerald-800/80 dark:text-emerald-200/80">
           Data Anda telah berhasil dikirim. Kami akan meninjaunya segera.
         </p>
       </div>
@@ -92,7 +91,19 @@
       const [errors, setErrors] = useState({});
       const [submissionError, setSubmissionError] = useState(null);
 
-      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWqr7tYnWXIKiN1gB4fWGPttRT9-eZgekEl3lSaaAIkgedtY2r1Qv74IjlKp7J7R2w/exec";
+      const GOOGLE_SCRIPT_URL = "PASTE_APPS_SCRIPT_EXEC_URL_HERE";
+
+      // --- Ambil IP publik klien (CORS-friendly) ---
+      const [clientIP, setClientIP] = useState("");
+      useEffect(() => {
+        (async () => {
+          try {
+            const r = await fetch("https://api64.ipify.org?format=json");
+            const j = await r.json();
+            setClientIP(j.ip || "");
+          } catch (_) { /* ignore */ }
+        })();
+      }, []);
 
       const handleChange = useCallback((e) => {
         const { id, value } = e.target;
@@ -103,6 +114,10 @@
       const urlRegex = /^https?:\/\/[^\s]+$/i;
 
       const validateForm = () => {
+        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("PASTE_APPS_SCRIPT_EXEC_URL_HERE")) {
+          setSubmissionError("Konfigurasi GOOGLE_SCRIPT_URL dulu pada kode.");
+          return false;
+        }
         const newErr = {};
         if (formData.serviceUrl && !urlRegex.test(formData.serviceUrl)) newErr.serviceUrl = "URL layanan tidak valid.";
         if (formData.tosUrl && !urlRegex.test(formData.tosUrl)) newErr.tosUrl = "URL Terms tidak valid.";
@@ -126,6 +141,9 @@
         try {
           const fd = new FormData();
           Object.entries(formData).forEach(([k, v]) => fd.append(k, v));
+          fd.append("sourceIP", clientIP || "unknown");
+          fd.append("userAgent", navigator.userAgent || "");
+
           await fetch(GOOGLE_SCRIPT_URL, { method: "POST", body: fd });
 
           setStatus("success");

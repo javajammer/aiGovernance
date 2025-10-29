@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import FormField from './components/FormField';
-import SuccessMessage from './components/SuccessMessage';
+import FormField from './components/FormField.tsx';
+import SuccessMessage from './components/SuccessMessage.tsx';
 
 interface FormData {
   serviceUrl: string;
@@ -25,7 +25,7 @@ const initialFormData: FormData = {
 };
 
 // !!! PENTING: Ganti dengan URL Web App dari Google Apps Script Anda !!!
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/kawansehatindonesia.com/s/AKfycbyXEc6PSiWvrsruoAQALfz_8YE5k7bNcRUrDgYXNWLFV4zDLzQ2XDnns1rudgQCUxiA/exec';
+const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);

@@ -25,7 +25,7 @@ const initialFormData: FormData = {
 };
 
 // !!! PENTING: Ganti dengan URL Web App dari Google Apps Script Anda !!!
-const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/a/macros/kawansehatindonesia.com/s/AKfycbyXEc6PSiWvrsruoAQALfz_8YE5k7bNcRUrDgYXNWLFV4zDLzQ2XDnns1rudgQCUxiA/exec';
 
 const App: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);

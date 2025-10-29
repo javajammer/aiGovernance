@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Formulir Pengumpulan Data</title>
 
-  <!-- Tailwind (CDN) -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Babel Standalone -->
   <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 
-  <!-- Import map: gunakan SATU versi React konsisten (React 18) -->
+  <!-- Import map: konsisten React 18 -->
   <script type="importmap">
   {
     "imports": {
@@ -25,16 +25,11 @@
 <body class="bg-slate-50 dark:bg-slate-900">
   <div id="root"></div>
 
-  <!-- 
-    Penting:
-    1) type="text/babel" agar diproses Babel
-    2) data-type="module" supaya import ESM bekerja di browser
-    3) data-presets berisi react + typescript supaya TSX diparse
-  -->
+  <!-- Diproses oleh Babel + ESM, preset sederhana -->
   <script
     type="text/babel"
     data-type="module"
-    data-presets="[['react', {'runtime':'classic'}], 'typescript']"
+    data-presets="typescript,react"
     src="./index.tsx">
   </script>
 </body>

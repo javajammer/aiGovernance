@@ -55,7 +55,7 @@
           "w-full px-4 py-2 mt-2 bg-slate-50 dark:bg-slate-700 border rounded-lg focus:outline-none focus:ring-2 dark:text-white transition-colors duration-300 " +
           (error
             ? "border-red-500 focus:ring-red-500"
-            : "border-slate-300 dark:border-slate-600 focus:border-indigo-500 focus:ring-indigo-500"),
+            : "border-slate-300 dark:border-slate-600 focus:border-green-500 focus:ring-green-500"),
       };
 
       return (
@@ -101,10 +101,6 @@
       const urlRegex = /^https?:\/\/[^\s]+$/i;
 
       const validateForm = () => {
-        if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE") {
-          setSubmissionError("Konfigurasi GOOGLE_SCRIPT_URL dulu pada kode.");
-          return false;
-        }
         const newErr = {};
         if (formData.serviceUrl && !urlRegex.test(formData.serviceUrl)) newErr.serviceUrl = "URL layanan tidak valid.";
         if (formData.tosUrl && !urlRegex.test(formData.tosUrl)) newErr.tosUrl = "URL Terms tidak valid.";
@@ -187,7 +183,7 @@
                       <button
                         type="submit"
                         disabled={status === "submitting"}
-                        className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-300 disabled:bg-indigo-400 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300 disabled:bg-green-400 disabled:cursor-not-allowed flex items-center justify-center"
                       >
                         {status === "submitting" ? (
                           <>
